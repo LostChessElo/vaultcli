@@ -8,38 +8,42 @@ class VaultConfig:
         self._conf_file = self._base_dir / "master.json"
         self._base_dir.mkdir(parents=True, exist_ok=True)
 
+
+    @property
     def conf_dir(self):
         return self._base_dir
     
+    @property
     def conf_file(self):
         return self._conf_file
     
     def write_to_master(self, data: dict) -> None:
+        if os.geteuid() != 0:
+            raise PermissionError("Vaultcli must be run with sudo permissions.")
         try:
             with open(self.conf_file(), "w") as f:
                 json.dump(data, f)
+            self._conf_file.chmod(0o600) 
+            os.chown(self._conf_file, 0,0)
         except FileNotFoundError:
-            return "Main config file missing from ~/.config/vconf"
-        except TypeError:
-            return "Data must be a valid dictionary"
+            raise FileNotFoundError("Error: file missing from config dir")
 
     def read_master(self) -> dict:
+        if os.geteuid() != 0:
+            raise PermissionError("Vaultcli must be run with sudo permissions.")
         try:
             with open(self.conf_file(), "r") as f:
                 data = json.load(f)
             return data 
         except FileNotFoundError:
-            return "Main config file missing from ~/.config/vconf"
-        except json.JSONDecodeError:
-            return "Error: could not decode json file"
+            raise FileNotFoundError("Error: file missing from config dir")
         
     def is_empty(self) -> bool:
         try:
             with open(self.conf_file(), "r") as f:
-                data = json.load(f)
-            return True if not data else False
+                return not bool(json.load(f))
         except FileNotFoundError:
-            return "Error: main config missing from ~/.config/vconf"
+            raise FileNotFoundError("Error: file missing from config dir")
         
     def exists(self) -> bool:
         return self._conf_file.exists()
