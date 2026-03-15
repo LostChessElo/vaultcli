@@ -5,7 +5,7 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 import base64
-from config.conf import VaultConfig
+from configuration.conf import VaultConfig
 
 
 class Encryption:
@@ -24,7 +24,7 @@ class Encryption:
         return self._pwd_file
 
     def _get_salt(self):
-        if  not self._conf.exists() or self._conf.is_empty():
+        if not self._conf.exists() or self._conf.is_empty():
             raise RuntimeError("Missing config")
         data = self._conf.read_master()
         return data["salt"].encode()
