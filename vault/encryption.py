@@ -5,7 +5,7 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 import base64
-from configuration.conf import VaultConfig
+from conf import VaultConfig
 
 
 class Encryption:
@@ -79,7 +79,6 @@ class Encryption:
         existing[service] = encrypted
         self.write_to(existing)
 
-
     def get_pwd(self, service: str, master_pwd: str):
         data = self.read_from()
         if not data or service not in data.keys():
@@ -87,4 +86,3 @@ class Encryption:
         k = self._derive_key(master_pwd)
         return self._decrypt(data[service], k)
 
-    

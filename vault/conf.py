@@ -8,7 +8,6 @@ class VaultConfig:
         self._conf_file = self._base_dir / "master.json"
         self._base_dir.mkdir(parents=True, exist_ok=True)
 
-
     @property
     def conf_dir(self):
         return self._base_dir
@@ -21,7 +20,7 @@ class VaultConfig:
         if os.geteuid() != 0:
             raise PermissionError("Vaultcli must be run with sudo permissions.")
         try:
-            with open(self.conf_file(), "w") as f:
+            with open(self.conf_file, "w") as f:
                 json.dump(data, f)
             self._conf_file.chmod(0o600) 
             os.chown(self._conf_file, 0,0)
@@ -32,18 +31,29 @@ class VaultConfig:
         if os.geteuid() != 0:
             raise PermissionError("Vaultcli must be run with sudo permissions.")
         try:
-            with open(self.conf_file(), "r") as f:
+            with open(self.conf_file, "r") as f:
                 data = json.load(f)
             return data 
         except FileNotFoundError:
             raise FileNotFoundError("Error: file missing from config dir")
         
+    def clear(self):
+        if os.geteuid() != 0:
+            raise PermissionError("Vaultcli must be run with sudo permissions.")
+        try:
+            with open(self.conf_file, "w") as f:
+                json.dump({}, f)
+        except FileNotFoundError:
+            raise FileNotFoundError("Error: file missing from config dir")
+        
+        
     def is_empty(self) -> bool:
         try:
-            with open(self.conf_file(), "r") as f:
+            with open(self.conf_file, "r") as f:
                 return not bool(json.load(f))
         except FileNotFoundError:
             raise FileNotFoundError("Error: file missing from config dir")
         
     def exists(self) -> bool:
         return self._conf_file.exists()
+    

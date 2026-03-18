@@ -1,5 +1,5 @@
 import bcrypt 
-from configuration.conf import VaultConfig
+from conf import VaultConfig
 
 
 class Auth:
@@ -14,8 +14,6 @@ class Auth:
         return bcrypt.checkpw(password.encode(), data["master_pwd"].encode())
         
     def set_up(self, pwd: str):
-        if not self._validate_password(pwd):
-            raise ValueError("Password must be 8 charecters long and contain atleast one special charecter, a letter and a digit")
         salt = bcrypt.gensalt()
         hashed_pwd = bcrypt.hashpw(pwd.encode(), salt)
         self._config.write_to_master({"master_pwd": hashed_pwd.decode(), "salt": salt.decode()})
@@ -30,11 +28,8 @@ class Auth:
     
     def is_configured(self):
         return self._config.exists() and not self._config.is_empty()
-        
-
-
-   
-
-
-
     
+a = Auth()
+c = VaultConfig()
+print(c.clear())
+print(c.read_master())
