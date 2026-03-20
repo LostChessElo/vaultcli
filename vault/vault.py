@@ -1,9 +1,9 @@
 import sys
 import os
 import platform
-import argparse
 from auth import Auth
 from encryption import Encryption 
+from conf import VaultConfig
 
 
 class Vault:
@@ -31,13 +31,13 @@ class Vault:
         print("Too many failed attempts.")
 
     def _set_up(self):
+
         while True:
             mpwd = input("Set a master password: ")
             if not self._validate_password(mpwd):
                 print("Password must be 8 characters long and contain a special character and a number.")
                 continue 
 
-            attempts = 0
             attempts = 0
             while attempts < 3:
                 reattempt = input("Retype master password: ")
@@ -51,16 +51,39 @@ class Vault:
                 print("Too many failed attempts.")
                 break
     
-    def menu(self):
-        os.system("clear")
+    def ui(self):
+        if self._conf.is_empty():
+            self._set_up()
+        else:
+            self.login()
         while True:
+            print("1. Add service")
+            print("2. View service")
+            print("3. Remove service")
+            print("4. Quit")
             try:
-                ui = int(input(f"vaultcli@{self.osname}:~$ "))
+                ui = int(input("Please select an option (1-4): "))
+                if ui == 1:
+                    service = input("Please enter service name: ").strip()
+                    password = input("Enter service password: ").strip()
+                    self._encryption.add_pwd(service, password, self._master_pwd)
+                elif ui == 2:
+                    print("=" * 6)
+                    print(self._encryption.get_all())
+                    print("=" * 6)
+                    service = input("Enter service name: ").strip()
+                    password = self._encryption.get_pwd(service, self._master_pwd)
+                    print(password)
+                elif ui == 3:
+                    service = input("Emter service to be removed: ").strip()
+                    r = self._encryption.remove_pwd(service, self._master_pwd)
+                    if r:
+                        print(("Successful."))
+                elif ui == 4:
+                    sys.exit()
             except Exception as e:
+                print(f"Error occured: {e}")
                 continue
-
-    def _args(self):
-        pass
 
 
     def _validate_password(self, pwd: str) -> bool:
@@ -72,4 +95,4 @@ class Vault:
                 and any(i in special_chars for i in pwd))
 
 v = Vault()
-v.menu()
+v.ui()

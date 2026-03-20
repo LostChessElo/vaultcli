@@ -85,4 +85,16 @@ class Encryption:
             raise KeyError("Service not found.")
         k = self._derive_key(master_pwd)
         return self._decrypt(data[service], k)
+    
+    def remove_pwd(self, service: str, master_pwd: str) -> bool:
+        data = self.read_from()
+        with open(self._pwd_file, "w") as f:
+            if not data or service not in data.keys():
+                raise KeyError("Service not found.")
+            del data[service]
+            json.dump(data, f)
+        return service not in data.keys()
 
+    def get_all(self):
+        data = self.read_from()
+        return f" Services:\n {" \n ".join(data.keys())}"
