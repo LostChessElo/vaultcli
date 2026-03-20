@@ -10,6 +10,7 @@ class Vault:
     def __init__(self):
         self._authenticate = Auth()
         self._encryption = Encryption()
+        self._conf = VaultConfig()
         self._master_pwd = None
         self.osname = platform.freedesktop_os_release()["NAME"]
 
@@ -37,9 +38,10 @@ class Vault:
                 continue 
 
             attempts = 0
+            attempts = 0
             while attempts < 3:
-                reatempt = input("Retype master password: ")
-                if mpwd != reatempt:
+                reattempt = input("Retype master password: ")
+                if mpwd != reattempt:
                     attempts += 1
                     print("Passwords dont match.")
                 else:

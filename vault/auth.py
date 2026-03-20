@@ -20,8 +20,3 @@ class Auth:
 
     def is_configured(self):
         return self._config.exists() and not self._config.is_empty()
-    
-a = Auth()
-c = VaultConfig()
-print(c.clear())
-print(c.read_master())
