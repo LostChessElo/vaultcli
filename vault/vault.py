@@ -87,7 +87,12 @@ class Vault:
                 continue
 
     def _add_service(self):
-        pass
+        while True:
+            service = input("Service: ").strip().lower()
+            password = input("Password: ")
+            self._encryption.add_pwd(service, password, self.master_pwd())
+            return f"Successfully saved {service} password."
+
 
     def _view_service(self):
         pass

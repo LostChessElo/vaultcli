@@ -72,7 +72,7 @@ class Encryption:
         except FileNotFoundError:
             raise FileNotFoundError("Error: missing vault file")
             
-    def add_pwd(self, service: str, pwd: str, master_pwd: str):
+    def add_pwd(self, service: str, pwd: str, master_pwd: str) -> None:
         k = self._derive_key(master_pwd)
         encrypted = self._encrypt(pwd, k)
         existing = self.read_from()
