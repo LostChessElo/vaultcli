@@ -52,7 +52,7 @@ class VaultConfig:
             with open(self.conf_file, "r") as f:
                 return not bool(json.load(f))
         except FileNotFoundError:
-            raise FileNotFoundError("Error: file missing from config dir")
+            return True
         
     def exists(self) -> bool:
         return self._conf_file.exists()

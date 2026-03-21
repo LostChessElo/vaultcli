@@ -1,6 +1,7 @@
 import sys
 import os
 import platform
+from simple_term_menu import TerminalMenu
 from auth import Auth
 from encryption import Encryption 
 from conf import VaultConfig
@@ -52,61 +53,56 @@ class Vault:
                 break
     
     def ui(self):
+        os.system("clear")
         if self._conf.is_empty():
             self._set_up()
         else:
             self.login()
+
+        options = ["Add service", "Get service", "Remove service", "Quit"]
+
         while True:
-            print("1. Add service")
-            print("2. View service")
-            print("3. Remove service")
-            print("4. Quit")
-            try:
-                ui = int(input("Please select an option (1-4): "))
-                if ui == 1:
-                    service = input("Please enter service name: ").strip()
-                    password = input("Enter service password: ").strip()
-                    self._encryption.add_pwd(service, password, self._master_pwd)
-                elif ui == 2:
-                    print("=" * 6)
-                    print(self._encryption.get_all())
-                    print("=" * 6)
-                    service = input("Enter service name: ").strip()
-                    password = self._encryption.get_pwd(service, self._master_pwd)
-                    print(password)
-                elif ui == 3:
-                    service = input("Emter service to be removed: ").strip()
-                    r = self._encryption.remove_pwd(service, self._master_pwd)
-                    if r:
-                        print(("Successful."))
-                elif ui == 4:
-                    sys.exit()
-            except Exception as e:
-                print(f"Error occured: {e}")
-                continue
+            os.system("clear")
+            menu = TerminalMenu(options)
+            chosen = menu.show()
+
+            if chosen == 3:
+                sys.exit()
+            elif chosen == 0:
+                os.system("clear")
+                self._add_service()
+            elif chosen == 1:
+                os.system("clear")
+                self._get_service()
+            elif chosen == 2:
+                os.system("clear")
+                self._remove_service()
 
     def _add_service(self):
-        while True:
-            service = input("Service: ").strip().lower()
-            password = input("Password: ")
-            self._encryption.add_pwd(service, password, self.master_pwd())
-            return f"Successfully saved {service} password."
+        service = input("Service: ").strip().lower()
+        password = input("Password: ")
+        self._encryption.add_pwd(service, password, self._master_pwd)
+        print(f"Successfully saved {service} password.")
 
     def _get_service(self):
-        if not self._encryption.is_empty():
-            content = self._encryption.get_all()
-            self.display("Services", content)
+        if self._encryption.is_empty():
+            print("No services saved.")
+            return
+        content = self._encryption.get_all()
+        self._display("Services", content)
         service = input("Enter service name: ").strip()
         password = self._encryption.get_pwd(service, self._master_pwd)
         print(password)
-        
 
     def _remove_service(self):
-        pass
+        service = input("Emter service to be removed: ").strip()
+        r = self._encryption.remove_pwd(service, self._master_pwd)
+        if r:
+            print("Successful.")
 
 
 
-    def display(self, title, content, width=50):
+    def _display(self, title, content, width=50):
         BLUE  = "\033[34m"
         RESET = "\033[0m"
         top        = f"╭{'─' * (width - 2)}╮"
@@ -139,4 +135,4 @@ class Vault:
                 and any(i in special_chars for i in pwd))
 
 v = Vault()
-v.get_service()
+v.ui()

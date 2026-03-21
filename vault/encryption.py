@@ -70,7 +70,7 @@ class Encryption:
             with open(self._pwd_file, "r") as f:
                 return not bool(json.load(f))
         except FileNotFoundError:
-            raise FileNotFoundError("Error: missing vault file")
+            return True
             
     def add_pwd(self, service: str, pwd: str, master_pwd: str) -> None:
         k = self._derive_key(master_pwd)
@@ -88,13 +88,12 @@ class Encryption:
     
     def remove_pwd(self, service: str, master_pwd: str) -> bool:
         data = self.read_from()
-        with open(self._pwd_file, "w") as f:
-            if not data or service not in data.keys():
-                raise KeyError("Service not found.")
-            del data[service]
-            json.dump(data, f)
-        return service not in data.keys()
+        if not data or service not in data:
+            raise KeyError("Service not found.")
+        del data[service]
+        self.write_to(data)
+        return service not in data
 
     def get_all(self):
         data = self.read_from()
-        return f"{"\n".join(data.keys())}"
+        return "\n".join(data.keys())
