@@ -1,6 +1,7 @@
 import sys
 import os
 import platform
+from simple_term_menu import TerminalMenu
 from auth import Auth
 from encryption import Encryption 
 from conf import VaultConfig
@@ -85,6 +86,15 @@ class Vault:
                 print(f"Error occured: {e}")
                 continue
 
+    def _add_service(self):
+        pass
+
+    def _view_service(self):
+        pass
+
+    def _remove_service(self):
+        pass
+
 
     def _validate_password(self, pwd: str) -> bool:
         special_chars = list("!@#$%^&*()[]{}|:;',.<>?/-_+=")
@@ -94,5 +104,3 @@ class Vault:
                 and any(i.isalpha() for i in pwd) 
                 and any(i in special_chars for i in pwd))
 
-v = Vault()
-v.ui()
