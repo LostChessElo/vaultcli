@@ -103,6 +103,57 @@ class Vault:
                 selected += 1
             elif key in (curses.KEY_ENTER, 10, 13):
                 return selected
+            
+    def _input(self, stdscr, title, prompt, secret=False):
+        curses.curs_set(1)
+        curses.start_color()
+        curses.use_default_colors()
+        curses.init_pair(1, curses.COLOR_BLUE, -1)
+
+        BLUE   = curses.color_pair(1)
+        NORMAL = curses.A_NORMAL
+
+        width  = 50
+        top        = f"╭{'━' * (width - 2)}╮"
+        bottom     = f"╰{'━' * (width - 2)}╯"
+        empty      = f"│{' ' * (width - 2)}│"
+        divider    = f"├{'━' * (width - 2)}┤"
+        title_line = f"│{title.center(width - 2)}│"
+        prompt_line = f"│ {prompt:<{width - 3}}│"
+
+        value = ""
+
+        while True:
+            stdscr.clear()
+
+            row = 0
+            stdscr.addstr(row, 0, top, BLUE);          row += 1
+            stdscr.addstr(row, 0, title_line, BLUE);   row += 1
+            stdscr.addstr(row, 0, divider, BLUE);      row += 1
+            stdscr.addstr(row, 0, empty, BLUE);        row += 1
+            stdscr.addstr(row, 0, prompt_line, BLUE);  row += 1
+
+            display = "*" * len(value) if secret else value
+            input_line = f"│ {display:<{width - 3}}│"
+            stdscr.addstr(row, 0, "│", BLUE)
+            stdscr.addstr(row, 1, f" {display:<{width - 3}}", NORMAL)
+            stdscr.addstr(row, width - 1, "│", BLUE)
+            row += 1
+
+            stdscr.addstr(row, 0, empty, BLUE);        row += 1
+            stdscr.addstr(row, 0, bottom, BLUE)
+
+            stdscr.move(5, 2 + len(display))
+
+            key = stdscr.getch()
+
+            if key in (curses.KEY_ENTER, 10, 13):
+                curses.curs_set(0)
+                return value.strip()
+            elif key in (curses.KEY_BACKSPACE, 127, 8):
+                value = value[:-1]
+            elif 32 <= key <= 126:
+                value += chr(key)
 
     def ui(self):
         os.system("clear")
