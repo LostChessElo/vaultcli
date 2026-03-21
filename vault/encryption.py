@@ -97,4 +97,4 @@ class Encryption:
 
     def get_all(self):
         data = self.read_from()
-        return f" Services:\n {" \n ".join(data.keys())}"
+        return f"{"\n".join(data.keys())}"

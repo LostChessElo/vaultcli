@@ -1,7 +1,6 @@
 import sys
 import os
 import platform
-from simple_term_menu import TerminalMenu
 from auth import Auth
 from encryption import Encryption 
 from conf import VaultConfig
@@ -93,12 +92,42 @@ class Vault:
             self._encryption.add_pwd(service, password, self.master_pwd())
             return f"Successfully saved {service} password."
 
-
-    def _view_service(self):
-        pass
+    def _get_service(self):
+        if not self._encryption.is_empty():
+            content = self._encryption.get_all()
+            self.display("Services", content)
+        service = input("Enter service name: ").strip()
+        password = self._encryption.get_pwd(service, self._master_pwd)
+        print(password)
+        
 
     def _remove_service(self):
         pass
+
+
+
+    def display(self, title, content, width=50):
+        BLUE  = "\033[34m"
+        RESET = "\033[0m"
+        top        = f"╭{'─' * (width - 2)}╮"
+        bottom     = f"╰{'─' * (width - 2)}╯"
+        empty      = f"│{' ' * (width - 2)}│"
+        title_line = f"│{title.center(width - 2)}│"
+        divider    = f"├{'─' * (width - 2)}┤"
+
+        lines = content.splitlines()
+        content_lines = []
+        for line in lines:
+            padded = f"│ {line:<{width - 3}}│"
+            content_lines.append(padded)
+
+        print(BLUE + top)
+        print(title_line)
+        print(divider)
+        for line in content_lines:
+            print(line)
+        print(empty)
+        print(bottom + RESET)
 
 
     def _validate_password(self, pwd: str) -> bool:
@@ -109,3 +138,5 @@ class Vault:
                 and any(i.isalpha() for i in pwd) 
                 and any(i in special_chars for i in pwd))
 
+v = Vault()
+v.get_service()
