@@ -1,6 +1,9 @@
 import sys
 import os
 import platform
+import time 
+import pyperclip
+import curses
 from simple_term_menu import TerminalMenu
 from auth import Auth
 from encryption import Encryption 
@@ -19,7 +22,7 @@ class Vault:
     def master_pwd(self):
         return self._master_pwd
 
-    def login(self):
+    def _login(self):
         attempts = 0
         while attempts < 3:
             mpwd = input("Enter master password: ")
@@ -52,31 +55,96 @@ class Vault:
                 print("Too many failed attempts.")
                 break
     
+    def _menu(self, stdscr, title, options, width=40):
+        curses.curs_set(0)
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_BLUE)
+
+        BLUE  = curses.color_pair(1)
+        SELECTED = curses.color_pair(2)
+
+        selected = 0
+
+        while True:
+            stdscr.clear()
+
+            top     = f"╭{'━' * (width - 2)}╮"
+            bottom  = f"╰{'━' * (width - 2)}╯"
+            empty   = f"│{' ' * (width - 2)}│"
+            divider = f"├{'━' * (width - 2)}┤"
+            title_line = f"│{title.center(width - 2)}│"
+
+            row = 0
+            stdscr.addstr(row, 0, top, BLUE);         row += 1
+            stdscr.addstr(row, 0, title_line, BLUE);  row += 1
+            stdscr.addstr(row, 0, divider, BLUE);     row += 1
+            stdscr.addstr(row, 0, empty, BLUE);       row += 1
+
+            for i, option in enumerate(options):
+                label = f"  {option}"
+                line  = f"│{label:<{width - 2}}│"
+                if i == selected:
+                    stdscr.addstr(row, 0, "│", BLUE)
+                    stdscr.addstr(row, 1, f"→ {option:<{width - 4}}", SELECTED)
+                    stdscr.addstr(row, width - 1, "│", BLUE)
+                else:
+                    stdscr.addstr(row, 0, line, BLUE)
+                row += 1
+
+            stdscr.addstr(row, 0, empty, BLUE);  row += 1
+            stdscr.addstr(row, 0, bottom, BLUE)
+
+            key = stdscr.getch()
+
+            if key == curses.KEY_UP and selected > 0:
+                selected -= 1
+            elif key == curses.KEY_DOWN and selected < len(options) - 1:
+                selected += 1
+            elif key in (curses.KEY_ENTER, 10, 13):
+                return selected
+
     def ui(self):
         os.system("clear")
         if self._conf.is_empty():
             self._set_up()
         else:
-            self.login()
+            self._login()
 
-        options = ["Add service", "Get service", "Remove service", "Quit"]
+        options = ["Add service", "Get service", "Remove service", "Remove all services", "Log out", "Quit"]
 
         while True:
-            os.system("clear")
-            menu = TerminalMenu(options)
-            chosen = menu.show()
+            try:
+                chosen = curses.wrapper(lambda stdscr: self._menu(stdscr, "VaultCLI", options))
 
-            if chosen == 3:
-                sys.exit()
-            elif chosen == 0:
-                os.system("clear")
-                self._add_service()
-            elif chosen == 1:
-                os.system("clear")
-                self._get_service()
-            elif chosen == 2:
-                os.system("clear")
-                self._remove_service()
+                if chosen == 5:
+                    print("Exiting")
+                    time.sleep(1)
+                    sys.exit()
+                elif chosen == 0:
+                    os.system("clear")
+                    self._add_service()
+                    time.sleep(1.5)
+                elif chosen == 1:
+                    os.system("clear")
+                    self._get_service()
+                    time.sleep(1.5)
+                elif chosen == 2:
+                    os.system("clear")
+                    self._remove_service()
+                    time.sleep(1.5)
+                elif chosen == 3:
+                    os.system("clear")
+                    self._remove_all()
+                    time.sleep(1.5)
+                elif chosen == 4:
+                    self._master_pwd = None
+                    os.system("clear")
+                    time.sleep(1)
+                    self._login()
+
+            except Exception as e:
+                return f"Error: {e}"
 
     def _add_service(self):
         service = input("Service: ").strip().lower()
@@ -92,15 +160,24 @@ class Vault:
         self._display("Services", content)
         service = input("Enter service name: ").strip()
         password = self._encryption.get_pwd(service, self._master_pwd)
-        print(password)
+        pyperclip.copy(password)
+        print("Password copied to clipboard.")
 
     def _remove_service(self):
+        if self._encryption.is_empty():
+            print("No services saved.")
+            return
         service = input("Emter service to be removed: ").strip()
         r = self._encryption.remove_pwd(service, self._master_pwd)
         if r:
             print("Successful.")
 
-
+    def _remove_all(self):
+        if self._encryption.is_empty():
+            print("No services saved.")
+            return
+        self._encryption.clear()
+        print("Removed all services.")
 
     def _display(self, title, content, width=50):
         BLUE  = "\033[34m"

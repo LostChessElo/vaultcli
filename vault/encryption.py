@@ -97,3 +97,12 @@ class Encryption:
     def get_all(self):
         data = self.read_from()
         return "\n".join(data.keys())
+    
+    def clear(self):
+        if os.geteuid() != 0:
+            raise PermissionError("Vaultcli must be run with sudo permissions.")
+        try:
+            with open(self.pwd_file, "w") as f:
+                json.dump({}, f)
+        except FileNotFoundError:
+            raise FileNotFoundError("Error: file missing from config dir")
