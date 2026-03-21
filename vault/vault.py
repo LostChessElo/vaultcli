@@ -4,7 +4,6 @@ import platform
 import time 
 import pyperclip
 import curses
-from simple_term_menu import TerminalMenu
 from auth import Auth
 from encryption import Encryption 
 from conf import VaultConfig
@@ -26,9 +25,11 @@ class Vault:
         attempts = 0
         while attempts < 3:
             mpwd = curses.wrapper(lambda s: self._input(s, "VaultCLI", "Master password:", secret=True))
-            if self._authenticate.check_pwd(mpwd):
-                self._master_pwd = mpwd
-                return
+        if self._authenticate.check_pwd(mpwd):
+            self._master_pwd = mpwd
+            return
+        else:
+            curses.wrapper(lambda s: self._show(s, "VaultCLI", "Incorrect password. Try again."))
             attempts += 1
         print("Too many failed attempts.")
 
@@ -42,7 +43,7 @@ class Vault:
 
             attempts = 0
             while attempts < 3:
-                reattempt = mpwd = curses.wrapper(lambda s: self._input(s, "VaultCLI", "Retype master password:", secret=True))
+                reattempt = curses.wrapper(lambda s: self._input(s, "VaultCLI", "Retype master password:", secret=True))
                 if mpwd != reattempt:
                     attempts += 1
                     print("Passwords dont match.")
@@ -232,31 +233,12 @@ class Vault:
         if self._encryption.is_empty():
             print("No services saved.")
             return
+        confirm = curses.wrapper(lambda s: self._input(s, "Remove All", "Type YES to confirm:"))
+        if confirm != "YES":
+            print("Cancelled.")
+            return
         self._encryption.clear()
         print("Removed all services.")
-
-    def _display(self, title, content, width=50):
-        BLUE  = "\033[34m"
-        RESET = "\033[0m"
-        top        = f"╭{'─' * (width - 2)}╮"
-        bottom     = f"╰{'─' * (width - 2)}╯"
-        empty      = f"│{' ' * (width - 2)}│"
-        title_line = f"│{title.center(width - 2)}│"
-        divider    = f"├{'─' * (width - 2)}┤"
-
-        lines = content.splitlines()
-        content_lines = []
-        for line in lines:
-            padded = f"│ {line:<{width - 3}}│"
-            content_lines.append(padded)
-
-        print(BLUE + top)
-        print(title_line)
-        print(divider)
-        for line in content_lines:
-            print(line)
-        print(empty)
-        print(bottom + RESET)
 
     def _show(self, stdscr, title, content):
         curses.curs_set(0)

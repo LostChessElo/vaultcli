@@ -86,7 +86,7 @@ class Encryption:
         k = self._derive_key(master_pwd)
         return self._decrypt(data[service], k)
     
-    def remove_pwd(self, service: str, master_pwd: str) -> bool:
+    def remove_pwd(self, service: str) -> bool:
         data = self.read_from()
         if not data or service not in data:
             raise KeyError("Service not found.")
