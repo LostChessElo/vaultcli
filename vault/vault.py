@@ -25,26 +25,24 @@ class Vault:
     def _login(self):
         attempts = 0
         while attempts < 3:
-            mpwd = input("Enter master password: ")
+            mpwd = curses.wrapper(lambda s: self._input(s, "VaultCLI", "Master password:", secret=True))
             if self._authenticate.check_pwd(mpwd):
                 self._master_pwd = mpwd
                 return
-            else:
-                print("Incorrect password, try again.")
-                attempts += 1
+            attempts += 1
         print("Too many failed attempts.")
 
     def _set_up(self):
 
         while True:
-            mpwd = input("Set a master password: ")
+            mpwd = curses.wrapper(lambda s: self._input(s, "VaultCLI", "Set master password:", secret=True))
             if not self._validate_password(mpwd):
                 print("Password must be 8 characters long and contain a special character and a number.")
                 continue 
 
             attempts = 0
             while attempts < 3:
-                reattempt = input("Retype master password: ")
+                reattempt = mpwd = curses.wrapper(lambda s: self._input(s, "VaultCLI", "Retype master password:", secret=True))
                 if mpwd != reattempt:
                     attempts += 1
                     print("Passwords dont match.")
@@ -58,43 +56,44 @@ class Vault:
     def _menu(self, stdscr, title, options, width=40):
         curses.curs_set(0)
         curses.start_color()
-        curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_BLUE)
+        curses.use_default_colors()
+        curses.init_pair(1, curses.COLOR_BLUE, -1)
+        curses.init_pair(2, curses.COLOR_WHITE, -1)
 
-        BLUE  = curses.color_pair(1)
-        SELECTED = curses.color_pair(2)
+        BLUE   = curses.color_pair(1)
+        NORMAL = curses.color_pair(2)
 
         selected = 0
 
         while True:
             stdscr.clear()
+            stdscr.bkgd(' ', curses.color_pair(0))
 
-            top     = f"╭{'━' * (width - 2)}╮"
-            bottom  = f"╰{'━' * (width - 2)}╯"
-            empty   = f"│{' ' * (width - 2)}│"
-            divider = f"├{'━' * (width - 2)}┤"
+            top        = f"╭{'─' * (width - 2)}╮"
+            bottom     = f"╰{'─' * (width - 2)}╯"
+            empty      = f"│{' ' * (width - 2)}│"
+            divider    = f"├{'─' * (width - 2)}┤"
             title_line = f"│{title.center(width - 2)}│"
 
             row = 0
-            stdscr.addstr(row, 0, top, BLUE);         row += 1
-            stdscr.addstr(row, 0, title_line, BLUE);  row += 1
-            stdscr.addstr(row, 0, divider, BLUE);     row += 1
-            stdscr.addstr(row, 0, empty, BLUE);       row += 1
+            stdscr.addstr(row, 0, top, BLUE);        row += 1
+            stdscr.addstr(row, 0, title_line, BLUE); row += 1
+            stdscr.addstr(row, 0, divider, BLUE);    row += 1
+            stdscr.addstr(row, 0, empty, BLUE);      row += 1
 
             for i, option in enumerate(options):
-                label = f"  {option}"
-                line  = f"│{label:<{width - 2}}│"
+                stdscr.addstr(row, 0, "│", BLUE)
                 if i == selected:
-                    stdscr.addstr(row, 0, "│", BLUE)
-                    stdscr.addstr(row, 1, f"→ {option:<{width - 4}}", SELECTED)
-                    stdscr.addstr(row, width - 1, "│", BLUE)
+                    stdscr.addstr(row, 1, f" → {option:<{width - 4}}", BLUE)
                 else:
-                    stdscr.addstr(row, 0, line, BLUE)
+                    stdscr.addstr(row, 1, f"    {option:<{width - 5}}", NORMAL)
+                stdscr.addstr(row, width - 1, "│", BLUE)
                 row += 1
 
             stdscr.addstr(row, 0, empty, BLUE);  row += 1
             stdscr.addstr(row, 0, bottom, BLUE)
 
+            stdscr.refresh()
             key = stdscr.getch()
 
             if key == curses.KEY_UP and selected > 0:
@@ -114,10 +113,10 @@ class Vault:
         NORMAL = curses.A_NORMAL
 
         width  = 50
-        top        = f"╭{'━' * (width - 2)}╮"
-        bottom     = f"╰{'━' * (width - 2)}╯"
+        top        = f"╭{'─' * (width - 2)}╮"
+        bottom     = f"╰{'─' * (width - 2)}╯"
         empty      = f"│{' ' * (width - 2)}│"
-        divider    = f"├{'━' * (width - 2)}┤"
+        divider    = f"├{'─' * (width - 2)}┤"
         title_line = f"│{title.center(width - 2)}│"
         prompt_line = f"│ {prompt:<{width - 3}}│"
 
@@ -157,10 +156,13 @@ class Vault:
 
     def ui(self):
         os.system("clear")
-        if self._conf.is_empty():
-            self._set_up()
-        else:
-            self._login()
+        try:
+            if self._conf.is_empty():
+                self._set_up()
+            else:
+                self._login()
+        except Exception as e:
+            print(f"Error: {e}")
 
         options = ["Add service", "Get service", "Remove service", "Remove all services", "Log out", "Quit"]
 
@@ -195,33 +197,36 @@ class Vault:
                     self._login()
 
             except Exception as e:
-                return f"Error: {e}"
+                print(f"Error: {e}")
+                sys.exit()
 
     def _add_service(self):
-        service = input("Service: ").strip().lower()
-        password = input("Password: ")
-        self._encryption.add_pwd(service, password, self._master_pwd)
+        service  = curses.wrapper(lambda s: self._input(s, "Add Service", "Service name:"))
+        password = curses.wrapper(lambda s: self._input(s, "Add Service", "Password:", secret=False))
+        self._encryption.add_pwd(service.lower(), password, self._master_pwd)
         print(f"Successfully saved {service} password.")
+
+    def _remove_service(self):
+        if self._encryption.is_empty():
+            print("No services saved.")
+            return
+        content = self._encryption.get_all()
+        curses.wrapper(lambda s: self._show(s, "Services", content))
+        service = curses.wrapper(lambda s: self._input(s, "Remove Service", "Service name:"))
+        r = self._encryption.remove_pwd(service.strip().lower(), self._master_pwd)
+        if r:
+            print("Successful.")
 
     def _get_service(self):
         if self._encryption.is_empty():
             print("No services saved.")
             return
         content = self._encryption.get_all()
-        self._display("Services", content)
-        service = input("Enter service name: ").strip()
-        password = self._encryption.get_pwd(service, self._master_pwd)
+        curses.wrapper(lambda s: self._show(s, "Services", content))
+        service  = curses.wrapper(lambda s: self._input(s, "Get Service", "Service name:"))
+        password = self._encryption.get_pwd(service.strip(), self._master_pwd)
         pyperclip.copy(password)
         print("Password copied to clipboard.")
-
-    def _remove_service(self):
-        if self._encryption.is_empty():
-            print("No services saved.")
-            return
-        service = input("Emter service to be removed: ").strip()
-        r = self._encryption.remove_pwd(service, self._master_pwd)
-        if r:
-            print("Successful.")
 
     def _remove_all(self):
         if self._encryption.is_empty():
@@ -253,6 +258,43 @@ class Vault:
         print(empty)
         print(bottom + RESET)
 
+    def _show(self, stdscr, title, content):
+        curses.curs_set(0)
+        curses.start_color()
+        curses.use_default_colors()
+        curses.init_pair(1, curses.COLOR_BLUE, -1)
+
+        BLUE   = curses.color_pair(1)
+        NORMAL = curses.A_NORMAL
+
+        width  = 50
+        lines  = content.splitlines()
+
+        top        = f"╭{'─' * (width - 2)}╮"
+        bottom     = f"╰{'─' * (width - 2)}╯"
+        empty      = f"│{' ' * (width - 2)}│"
+        divider    = f"├{'─' * (width - 2)}┤"
+        title_line = f"│{title.center(width - 2)}│"
+
+        stdscr.clear()
+        row = 0
+        stdscr.addstr(row, 0, top, BLUE);        row += 1
+        stdscr.addstr(row, 0, title_line, BLUE); row += 1
+        stdscr.addstr(row, 0, divider, BLUE);    row += 1
+        stdscr.addstr(row, 0, empty, BLUE);      row += 1
+
+        for line in lines:
+            stdscr.addstr(row, 0, "│", BLUE)
+            stdscr.addstr(row, 1, f" {line:<{width - 3}}", NORMAL)
+            stdscr.addstr(row, width - 1, "│", BLUE)
+            row += 1
+
+        stdscr.addstr(row, 0, empty, BLUE);  row += 1
+        stdscr.addstr(row, 0, bottom, BLUE); row += 1
+        stdscr.addstr(row, 0, "  press any key to continue", BLUE)
+
+        stdscr.getch()
+
 
     def _validate_password(self, pwd: str) -> bool:
         special_chars = list("!@#$%^&*()[]{}|:;',.<>?/-_+=")
@@ -262,5 +304,6 @@ class Vault:
                 and any(i.isalpha() for i in pwd) 
                 and any(i in special_chars for i in pwd))
 
-v = Vault()
-v.ui()
+if __name__ == "__main__":
+    vault = Vault()
+    vault.ui()
