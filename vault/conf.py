@@ -56,4 +56,3 @@ class VaultConfig:
         
     def exists(self) -> bool:
         return self._conf_file.exists()
-    

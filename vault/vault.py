@@ -4,6 +4,7 @@ import platform
 import time 
 import pyperclip
 import curses
+# import clipboard
 from auth import Auth
 from encryption import Encryption 
 from conf import VaultConfig
@@ -25,12 +26,12 @@ class Vault:
         attempts = 0
         while attempts < 3:
             mpwd = curses.wrapper(lambda s: self._input(s, "VaultCLI", "Master password:", secret=True))
-        if self._authenticate.check_pwd(mpwd):
-            self._master_pwd = mpwd
-            return
-        else:
-            curses.wrapper(lambda s: self._show(s, "VaultCLI", "Incorrect password. Try again."))
-            attempts += 1
+            if self._authenticate.check_pwd(mpwd):
+                self._master_pwd = mpwd
+                return
+            else:
+                curses.wrapper(lambda s: self._show(s, "VaultCLI", "Incorrect password. Try again."))
+                attempts += 1
         print("Too many failed attempts.")
 
     def _set_up(self):
@@ -51,8 +52,8 @@ class Vault:
                     self._master_pwd = mpwd
                     self._authenticate.set_up(mpwd)
                     return 
-                print("Too many failed attempts.")
-                break
+            print("Too many failed attempts.")
+            break
     
     def _menu(self, stdscr, title, options, width=40):
         curses.curs_set(0)
@@ -171,31 +172,32 @@ class Vault:
             try:
                 chosen = curses.wrapper(lambda stdscr: self._menu(stdscr, "VaultCLI", options))
 
-                if chosen == 5:
-                    print("Exiting")
-                    time.sleep(1)
-                    sys.exit()
-                elif chosen == 0:
-                    os.system("clear")
-                    self._add_service()
-                    time.sleep(1.5)
-                elif chosen == 1:
-                    os.system("clear")
-                    self._get_service()
-                    time.sleep(1.5)
-                elif chosen == 2:
-                    os.system("clear")
-                    self._remove_service()
-                    time.sleep(1.5)
-                elif chosen == 3:
-                    os.system("clear")
-                    self._remove_all()
-                    time.sleep(1.5)
-                elif chosen == 4:
-                    self._master_pwd = None
-                    os.system("clear")
-                    time.sleep(1)
-                    self._login()
+                match chosen:
+                    case 0:
+                        os.system("clear")
+                        self._add_service()
+                        time.sleep(1.5)
+                    case 1:
+                        os.system("clear")
+                        self._get_service()
+                        time.sleep(1.5)
+                    case 2:
+                        os.system("clear")
+                        self._remove_service()
+                        time.sleep(1.5)
+                    case 3:
+                        os.system("clear")
+                        self._remove_all()
+                        time.sleep(1.5)
+                    case 4:
+                        self._master_pwd = None
+                        os.system("clear")
+                        time.sleep(1)
+                        self._login() 
+                    case 5:
+                        print("Exiting")
+                        time.sleep(1)
+                        sys.exit()
 
             except Exception as e:
                 print(f"Error: {e}")
@@ -214,7 +216,7 @@ class Vault:
         content = self._encryption.get_all()
         curses.wrapper(lambda s: self._show(s, "Services", content))
         service = curses.wrapper(lambda s: self._input(s, "Remove Service", "Service name:"))
-        r = self._encryption.remove_pwd(service.strip().lower(), self._master_pwd)
+        r = self._encryption.remove_pwd(service.strip().lower())
         if r:
             print("Successful.")
 
@@ -227,13 +229,14 @@ class Vault:
         service  = curses.wrapper(lambda s: self._input(s, "Get Service", "Service name:"))
         password = self._encryption.get_pwd(service.strip(), self._master_pwd)
         pyperclip.copy(password)
+        # clipboard.copy(password)
         print("Password copied to clipboard.")
 
     def _remove_all(self):
         if self._encryption.is_empty():
             print("No services saved.")
             return
-        confirm = curses.wrapper(lambda s: self._input(s, "Remove All", "Type YES to confirm:"))
+        confirm = curses.wrapper(lambda s: self._input(s, "Remove All", "Type YES to confirm: "))
         if confirm != "YES":
             print("Cancelled.")
             return
