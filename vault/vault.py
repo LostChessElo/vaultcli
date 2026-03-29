@@ -4,10 +4,9 @@ import platform
 import time 
 import pyperclip
 import curses
-# import clipboard
-from auth import Auth
-from encryption import Encryption 
-from conf import VaultConfig
+from vault.auth import Auth
+from vault.encryption import Encryption 
+from vault.conf import VaultConfig
 
 
 class Vault:
