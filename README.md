@@ -27,7 +27,14 @@ vaultcli/
 │   ├── auth.py           ← Master password hashing and verification (bcrypt)
 │   ├── encryption.py     ← Key derivation, encrypt/decrypt, vault file I/O
 │   └── conf.py           ← Config file I/O for master.json
+├── tests/
+│   ├── test_vault.py
+│   ├── test_auth.py
+│   ├── test_encryption.py
+│   └── test_conf.py
 ├── vaultenv/             ← Virtual environment (not committed)
+├── install.sh            ← Automated installer
+├── uninstall.sh          ← Automated uninstaller
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -52,51 +59,67 @@ git clone https://github.com/LostChessElo/vaultcli.git
 cd vaultcli
 ```
 
-**2. Create and activate a virtual environment**
+**2. Run the installer**
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+The installer will:
+- Check your Python version
+- Create a virtual environment and install dependencies
+- Detect your display server and install the correct clipboard backend
+- Add the `vault` alias to your shell config
+
+**3. Reload your shell**
+
+**zsh**
+```bash
+source ~/.zshrc
+```
+**bash**
+```bash
+source ~/.bashrc
+```
+
+---
+
+### Manual Installation
+
+If you prefer to set up manually:
+
 ```bash
 python3 -m venv vaultenv
 source vaultenv/bin/activate
-```
-
-**3. Install dependencies**
-```bash
 pip install -r requirements.txt
-```
 
-**4. Install clipboard support**
-
-Wayland (Hyprland, Sway, GNOME on Wayland):
-```bash
+# Wayland
 sudo apt install wl-clipboard
-```
 
-X11:
-```bash
+# X11
 sudo apt install xclip
 ```
 
-**5. Set up the alias**
-
-Get your venv Python path:
-```bash
-which python
-```
-
-Add this to your `~/.bashrc` or `~/.zshrc` (replace paths with your own):
+Add this alias to your `~/.zshrc` or `~/.bashrc`:
 ```bash
 alias vault="sudo --preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR /home/<user>/vaultcli/vaultenv/bin/python /home/<user>/vaultcli/vault/vault.py"
 ```
 
-Reload your shell:
+---
+
+## Uninstallation
+
 ```bash
-source ~/.zshrc
+chmod +x uninstall.sh
+./uninstall.sh
 ```
+
+The uninstaller will remove the shell alias, config directory, vault data directory, and virtual environment — each with individual confirmation prompts.
 
 ---
 
 ## Usage
 
-Run the vault:
 ```bash
 vault
 ```
@@ -193,25 +216,12 @@ And make sure your alias uses `--preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR`.
 
 You are running without sudo. Use the alias or prefix with `sudo`.
 
-**`simple-term-menu` not found when running with sudo**
+**`ModuleNotFoundError` when running with sudo**
 
 sudo uses the system Python, not your venv. Use the full venv Python path in your alias:
 ```bash
-sudo /path/to/vaultenv/bin/python vault/vault.py
+sudo --preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR /path/to/vaultenv/bin/python vault/vault.py
 ```
-
-**Contributions not showing on GitHub**
-
-Make sure your git email matches a registered GitHub email:
-```bash
-git config user.email
-```
-
-If not, fix it:
-```bash
-git config --global user.email "youremail@gmail.com"
-```
-
 ---
 
 ## Dependencies
@@ -221,17 +231,22 @@ git config --global user.email "youremail@gmail.com"
 | `bcrypt` | Master password hashing and verification |
 | `cryptography` | Fernet encryption and PBKDF2 key derivation |
 | `pyperclip` | Clipboard access for password retrieval |
-| `simple-term-menu` | (unused — to be removed) |
 
 ---
 
-## Roadmap
+## Changelog
 
-- [ ] Session timeout after idle period
-- [ ] Clipboard auto-clear after 30 seconds
-- [ ] Remove `simple-term-menu` dependency
-- [ ] Update test suite to reflect current implementation
-- [ ] Deploy as installable CLI package
+### v1.0.0
+- Full terminal UI built with `curses`
+- Master password setup and login with bcrypt verification
+- Add, retrieve, remove, and wipe services
+- Passwords encrypted with Fernet via PBKDF2-derived key
+- Clipboard copy on password retrieval
+- Root-owned vault files with `chmod 600` permissions enforced at application level
+- Log out without quitting
+- Remove all services with confirmation prompt
+- Automated `install.sh` and `uninstall.sh`
+- 79-test pytest suite
 
 ---
 
