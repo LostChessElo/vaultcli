@@ -57,9 +57,9 @@ if ! command -v python3 &>/dev/null; then
 fi
 
 PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-REQUIRED="3.12"
+REQUIRED="3.10"
 
-if python3 -c "import sys; exit(0 if sys.version_info >= (3,12) else 1)"; then
+if python3 -c "import sys; exit(0 if sys.version_info >= (3,10) else 1)"; then
     success "Python $PYTHON_VERSION found."
 else
     error "Python $REQUIRED+ required. Found $PYTHON_VERSION."

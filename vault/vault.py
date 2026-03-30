@@ -2,6 +2,7 @@ import sys
 import os
 import platform
 import time 
+import subprocess
 import pyperclip
 import curses
 from auth import Auth
@@ -227,8 +228,7 @@ class Vault:
         curses.wrapper(lambda s: self._show(s, "Services", content))
         service  = curses.wrapper(lambda s: self._input(s, "Get Service", "Service name:"))
         password = self._encryption.get_pwd(service.strip(), self._master_pwd)
-        pyperclip.copy(password)
-        # clipboard.copy(password)
+        self._copy_to_clipboard(password)
         print("Password copied to clipboard.")
 
     def _remove_all(self):
@@ -279,6 +279,11 @@ class Vault:
 
         stdscr.getch()
 
+    def _copy_to_clipboard(self, text):
+        try:
+            subprocess.run(['xclip', '-selection', 'clipboard'], input=text.encode(), check=True)
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            pyperclip.copy(text)  # fallback
 
     def _validate_password(self, pwd: str) -> bool:
         special_chars = list("!@#$%^&*()[]{}|:;',.<>?/-_+=")
