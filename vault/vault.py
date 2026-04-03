@@ -283,7 +283,7 @@ class Vault:
         try:
             subprocess.run(['xclip', '-selection', 'clipboard'], input=text.encode(), check=True)
         except (FileNotFoundError, subprocess.CalledProcessError):
-            pyperclip.copy(text)  # fallback
+            pyperclip.copy(text)  
 
     def _validate_password(self, pwd: str) -> bool:
         special_chars = list("!@#$%^&*()[]{}|:;',.<>?/-_+=")
