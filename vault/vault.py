@@ -5,9 +5,9 @@ import time
 import subprocess
 import pyperclip
 import curses
-from auth import Auth
-from encryption import Encryption 
-from conf import VaultConfig
+from vault.auth import Auth
+from vault.encryption import Encryption 
+from vault.conf import VaultConfig
 
 
 class Vault:

@@ -1,5 +1,5 @@
 import bcrypt 
-from conf import VaultConfig
+from vault.conf import VaultConfig
 
 
 class Auth:
