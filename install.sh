@@ -35,10 +35,10 @@ echo ""
 
 # ── resolve install directory ─────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VAULT_ENTRY="$SCRIPT_DIR/vault/vault.py"
+VAULT_ENTRY="$SCRIPT_DIR/project.py"
 
 if [[ ! -f "$VAULT_ENTRY" ]]; then
-    error "Cannot find vault/vault.py in $SCRIPT_DIR"
+    error "Cannot find project.py in $SCRIPT_DIR"
     error "Run this script from the root of the vaultcli repo."
     exit 1
 fi
@@ -117,7 +117,6 @@ divider
 info "Checking clipboard backend..."
 divider
 
-# detect wayland or x11
 if [[ -n "$WAYLAND_DISPLAY" ]]; then
     DISPLAY_SERVER="wayland"
     CLIPBOARD_PKG="wl-clipboard"
@@ -154,9 +153,8 @@ info "Setting up shell alias..."
 divider
 
 PYTHON_BIN="$VENV_DIR/bin/python"
-ALIAS_CMD="alias vault=\"sudo --preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR $PYTHON_BIN $VAULT_ENTRY\""
+ALIAS_CMD="alias vault=\"sudo --preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR,XDG_SESSION_TYPE $PYTHON_BIN $VAULT_ENTRY\""
 
-# detect current shell
 CURRENT_SHELL="$(basename "$SHELL")"
 info "Detected shell: $CURRENT_SHELL"
 echo ""
@@ -173,6 +171,7 @@ setup_alias() {
     if grep -q "alias vault=" "$RC_FILE"; then
         warn "Alias already exists in $RC_FILE."
         if confirm "Overwrite it?"; then
+            sed -i '/# VaultCLI/{N;/alias vault=/d}' "$RC_FILE"
             sed -i '/alias vault=/d' "$RC_FILE"
         else
             info "Keeping existing alias in $RC_FILE."
