@@ -107,55 +107,69 @@ class Vault:
             
     def _input(self, stdscr, title, prompt, secret=False):
         curses.curs_set(1)
+        curses.set_escdelay(25)
         curses.start_color()
         curses.use_default_colors()
         curses.init_pair(1, curses.COLOR_BLUE, -1)
-
         BLUE   = curses.color_pair(1)
         NORMAL = curses.A_NORMAL
-
         width  = 50
-        top        = f"╭{'─' * (width - 2)}╮"
-        bottom     = f"╰{'─' * (width - 2)}╯"
-        empty      = f"│{' ' * (width - 2)}│"
-        divider    = f"├{'─' * (width - 2)}┤"
-        title_line = f"│{title.center(width - 2)}│"
+        top         = f"╭{'─' * (width - 2)}╮"
+        bottom      = f"╰{'─' * (width - 2)}╯"
+        empty       = f"│{' ' * (width - 2)}│"
+        divider     = f"├{'─' * (width - 2)}┤"
+        title_line  = f"│{title.center(width - 2)}│"
         prompt_line = f"│ {prompt:<{width - 3}}│"
-
         value = ""
+        show_hint = False
 
         while True:
+            max_y, max_x = stdscr.getmaxyx()
             stdscr.clear()
 
-            row = 0
-            stdscr.addstr(row, 0, top, BLUE);          row += 1
-            stdscr.addstr(row, 0, title_line, BLUE);   row += 1
-            stdscr.addstr(row, 0, divider, BLUE);      row += 1
-            stdscr.addstr(row, 0, empty, BLUE);        row += 1
-            stdscr.addstr(row, 0, prompt_line, BLUE);  row += 1
+            try:
+                row = 0
+                stdscr.addstr(row, 0, top, BLUE);          row += 1
+                stdscr.addstr(row, 0, title_line, BLUE);   row += 1
+                stdscr.addstr(row, 0, divider, BLUE);      row += 1
+                stdscr.addstr(row, 0, empty, BLUE);        row += 1
+                stdscr.addstr(row, 0, prompt_line, BLUE);  row += 1
+                display = "*" * len(value) if secret else value
+                # clamp display to fit inside the box
+                max_display = width - 4
+                display_clamped = display[-max_display:] if len(display) > max_display else display
+                stdscr.addstr(row, 0, "│", BLUE)
+                stdscr.addstr(row, 1, f" {display_clamped:<{width - 3}}", NORMAL)
+                stdscr.addstr(row, width - 1, "│", BLUE)
+                row += 1
+                hint = "│ Cannot be empty" + " " * (width - 19) + "│" if show_hint else empty
+                stdscr.addstr(row, 0, hint, BLUE);         row += 1
+                stdscr.addstr(row, 0, bottom, BLUE)
+            except curses.error:
+                pass
 
-            display = "*" * len(value) if secret else value
-            input_line = f"│ {display:<{width - 3}}│"
-            stdscr.addstr(row, 0, "│", BLUE)
-            stdscr.addstr(row, 1, f" {display:<{width - 3}}", NORMAL)
-            stdscr.addstr(row, width - 1, "│", BLUE)
-            row += 1
-
-            stdscr.addstr(row, 0, empty, BLUE);        row += 1
-            stdscr.addstr(row, 0, bottom, BLUE)
-
-            stdscr.move(5, 2 + len(display))
+            # clamp cursor so it never goes out of bounds
+            cursor_x = min(2 + len(display_clamped), max_x - 1)
+            cursor_y = min(5, max_y - 1)
+            stdscr.move(cursor_y, cursor_x)
 
             key = stdscr.getch()
-
-            if key in (curses.KEY_ENTER, 10, 13):
+            if key == 27:
+                curses.curs_set(0)
+                return None
+            elif key in (curses.KEY_ENTER, 10, 13):
+                if not value.strip():
+                    show_hint = True
+                    continue
                 curses.curs_set(0)
                 return value.strip()
             elif key in (curses.KEY_BACKSPACE, 127, 8):
                 value = value[:-1]
+                show_hint = False
             elif 32 <= key <= 126:
                 value += chr(key)
-
+                show_hint = False
+                
     def ui(self):
         os.system("clear")
         try:
@@ -205,7 +219,13 @@ class Vault:
 
     def _add_service(self):
         service  = curses.wrapper(lambda s: self._input(s, "Add Service", "Service name:"))
+        if service is None:
+            return
+        
         password = curses.wrapper(lambda s: self._input(s, "Add Service", "Password:", secret=False))
+        if password is None:
+            return 
+        
         self._encryption.add_pwd(service.lower(), password, self._master_pwd)
         print(f"Successfully saved {service} password.")
 
@@ -216,6 +236,9 @@ class Vault:
         content = self._encryption.get_all()
         curses.wrapper(lambda s: self._show(s, "Services", content))
         service = curses.wrapper(lambda s: self._input(s, "Remove Service", "Service name:"))
+        if service is None:
+            return 
+        
         r = self._encryption.remove_pwd(service.strip().lower())
         if r:
             print("Successful.")
@@ -227,6 +250,9 @@ class Vault:
         content = self._encryption.get_all()
         curses.wrapper(lambda s: self._show(s, "Services", content))
         service  = curses.wrapper(lambda s: self._input(s, "Get Service", "Service name:"))
+        if service is None:
+            return 
+        
         password = self._encryption.get_pwd(service.strip(), self._master_pwd)
         self._copy_to_clipboard(password)
         print("Password copied to clipboard.")
