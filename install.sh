@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# ── colours ──────────────────────────────────────────────────
 BLUE='\033[34m'
 GREEN='\033[32m'
 RED='\033[31m'
@@ -8,7 +7,6 @@ YELLOW='\033[33m'
 RESET='\033[0m'
 BOLD='\033[1m'
 
-# ── helpers ───────────────────────────────────────────────────
 info()    { echo -e "${BLUE}${BOLD}[•]${RESET} $1"; }
 success() { echo -e "${GREEN}${BOLD}[✓]${RESET} $1"; }
 warn()    { echo -e "${YELLOW}${BOLD}[!]${RESET} $1"; }
@@ -24,7 +22,6 @@ divider() {
     echo -e "${BLUE}────────────────────────────────────────────────${RESET}"
 }
 
-# ── banner ────────────────────────────────────────────────────
 clear
 divider
 echo -e "${BLUE}${BOLD}"
@@ -33,7 +30,7 @@ echo -e "${RESET}"
 divider
 echo ""
 
-# ── resolve install directory ─────────────────────────────────
+#install dir
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VAULT_ENTRY="$SCRIPT_DIR/project.py"
 
@@ -46,7 +43,7 @@ fi
 info "Install directory: $SCRIPT_DIR"
 echo ""
 
-# ── step 1: check python ──────────────────────────────────────
+
 divider
 info "Checking Python version..."
 divider
@@ -66,8 +63,7 @@ else
     exit 1
 fi
 echo ""
-
-# ── step 2: create venv ───────────────────────────────────────
+# venv
 divider
 info "Setting up virtual environment..."
 divider
@@ -112,7 +108,7 @@ else
 fi
 echo ""
 
-# ── step 4: clipboard backend ─────────────────────────────────
+#clipboard
 divider
 info "Checking clipboard backend..."
 divider
@@ -147,7 +143,7 @@ else
 fi
 echo ""
 
-# ── step 5: alias setup ───────────────────────────────────────
+#set up alias
 divider
 info "Setting up shell alias..."
 divider
@@ -210,7 +206,6 @@ else
 fi
 echo ""
 
-# ── done ──────────────────────────────────────────────────────
 divider
 success "VaultCLI installation complete."
 divider

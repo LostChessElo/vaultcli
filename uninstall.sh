@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# ── colours ──────────────────────────────────────────────────
 BLUE='\033[34m'
 GREEN='\033[32m'
 RED='\033[31m'
@@ -8,7 +7,6 @@ YELLOW='\033[33m'
 RESET='\033[0m'
 BOLD='\033[1m'
 
-# ── helpers ───────────────────────────────────────────────────
 info()    { echo -e "${BLUE}${BOLD}[•]${RESET} $1"; }
 success() { echo -e "${GREEN}${BOLD}[✓]${RESET} $1"; }
 warn()    { echo -e "${YELLOW}${BOLD}[!]${RESET} $1"; }
@@ -24,7 +22,6 @@ divider() {
     echo -e "${BLUE}────────────────────────────────────────────────${RESET}"
 }
 
-# ── banner ────────────────────────────────────────────────────
 clear
 divider
 echo -e "${RED}${BOLD}"
@@ -44,7 +41,7 @@ echo ""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/vaultenv"
 
-# ── step 1: remove alias ──────────────────────────────────────
+#remove alias
 divider
 info "Removing shell alias..."
 divider
@@ -75,7 +72,7 @@ remove_alias "$HOME/.bashrc" "bash"
 remove_alias "$HOME/.zshrc"  "zsh"
 echo ""
 
-# ── step 2: remove venv ───────────────────────────────────────
+# remove venv
 divider
 info "Removing virtual environment..."
 divider
@@ -88,7 +85,7 @@ else
 fi
 echo ""
 
-# ── step 3: vault data ────────────────────────────────────────
+#remove vault data
 divider
 info "Checking for stored vault data..."
 divider
@@ -111,7 +108,6 @@ else
 fi
 echo ""
 
-# ── step 4: clipboard backend ─────────────────────────────────
 divider
 info "Clipboard backend..."
 divider
@@ -136,7 +132,6 @@ else
 fi
 echo ""
 
-# ── done ──────────────────────────────────────────────────────
 divider
 success "VaultCLI uninstalled."
 divider
