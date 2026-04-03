@@ -126,7 +126,7 @@ Key methods:
 ### Using the installer
 
 ```bash
-git clone https://github.com/yourusername/vaultcli
+git clone git@github.com:LostChessElo/vaultcli.git
 cd vaultcli
 chmod +x install.sh
 ./install.sh
