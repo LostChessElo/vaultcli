@@ -2,7 +2,7 @@
 
 A terminal-based encrypted password manager built in Python. VaultCLI stores your passwords locally in an encrypted file, protected by a master password. There are no cloud accounts, no subscriptions, and no data ever leaves your machine.
 
-#### Video Demo: https://youtu.be/REPLACE_WITH_YOUR_URL
+#### Video Demo: https://youtu.be/V3wQxBgROiE
 
 ---
 
